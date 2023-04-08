@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.AlreadyExistException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.model.User;
 
 import javax.validation.ValidationException;
 import java.util.List;
@@ -30,7 +30,7 @@ public class UserService {
 
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.toUser(userDto);
-        validateNewUser(user);
+        validateUserEmail(user.getEmail(), user.getId());
         return UserMapper.toUserDto(userStorage.addUser(user));
     }
 
@@ -60,18 +60,9 @@ public class UserService {
         User user = userStorage.getUserByID(userID);
         if (user == null) {
             throw new NotFoundException(String.format(
-                    "User with id = %d doesn't exists.", userID));
+                    "User with id = %d doesn't exist", userID));
         }
         return UserMapper.toUserDto(user);
-    }
-
-    private void validateNewUser(User user) {
-        validateUserEmail(user.getEmail(), user.getId());
-
-        if (userStorage.ifUserExists(user)) {
-            throw new AlreadyExistException(String.format(
-                    "User with id = %d already exists.", user.getId()));
-        }
     }
 
     private void validateUserEmail(String email, Integer userID) {

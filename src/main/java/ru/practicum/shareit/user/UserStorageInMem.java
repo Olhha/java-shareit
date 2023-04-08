@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,11 +34,6 @@ public class UserStorageInMem implements UserStorage {
 
         return users.values().stream().anyMatch(user -> user.getEmail().equals(email) &&
                 user.getId() != userID);
-    }
-
-    @Override
-    public boolean ifUserExists(User user) {
-        return users.get(user.getId()) != null;
     }
 
     @Override

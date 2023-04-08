@@ -3,13 +3,12 @@ package ru.practicum.shareit.item;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.UpdateForbiddenException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserService;
-import ru.practicum.shareit.user.dto.UserMapper;
+import ru.practicum.shareit.user.UserStorage;
+import ru.practicum.shareit.user.model.User;
 
 import javax.validation.ValidationException;
 import java.util.ArrayList;
@@ -19,18 +18,23 @@ import java.util.stream.Collectors;
 @Service
 public class ItemServiceImpl implements ItemService {
     private final ItemStorage itemStorage;
-    private final UserService userService;
+    private final UserStorage userStorage;
 
     @Autowired
     public ItemServiceImpl(@Qualifier("ItemStorageInMem") ItemStorage itemStorage,
-                           UserService userService) {
+                           UserStorage userStorage) {
         this.itemStorage = itemStorage;
-        this.userService = userService;
+        this.userStorage = userStorage;
     }
 
     @Override
     public ItemDto addItem(ItemDto itemDto, Integer userID) {
-        User user = UserMapper.toUser(userService.getUserByID(userID));
+        User user = userStorage.getUserByID(userID);
+        if (user == null) {
+            throw new NotFoundException(String.format(
+                    "Owner with id = %d doesn't exist", userID));
+        }
+
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(user);
         return ItemMapper.toItemDto(itemStorage.addItem(item));
@@ -78,7 +82,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemByID(int itemId) {
-        return ItemMapper.toItemDto(itemStorage.getItemByID(itemId));
+        Item item = itemStorage.getItemByID(itemId);
+        if (item == null) {
+            throw new NotFoundException("There's no item with id = " + itemId);
+        }
+        return ItemMapper.toItemDto(item);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package ru.practicum.shareit.user;
 
+import ru.practicum.shareit.user.model.User;
+
 import java.util.List;
 
 public interface UserStorage {
@@ -8,8 +10,6 @@ public interface UserStorage {
     User addUser(User user);
 
     boolean ifEmailIsNotUnique(String email, Integer userID);
-
-    boolean ifUserExists(User user);
 
     User updateUser(User user);
 
