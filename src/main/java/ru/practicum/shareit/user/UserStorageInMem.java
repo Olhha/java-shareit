@@ -3,10 +3,7 @@ package ru.practicum.shareit.user;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component("UserStorageInMem")
 public class UserStorageInMem implements UserStorage {
@@ -27,16 +24,6 @@ public class UserStorageInMem implements UserStorage {
     }
 
     @Override
-    public boolean ifEmailIsNotUnique(String email, Integer userID) {
-        if (userID == null) {
-            return users.values().stream().anyMatch(user -> user.getEmail().equals(email));
-        }
-
-        return users.values().stream().anyMatch(user -> user.getEmail().equals(email) &&
-                user.getId() != userID);
-    }
-
-    @Override
     public User updateUser(User user) {
         users.put(user.getId(), user);
         return user;
@@ -50,5 +37,14 @@ public class UserStorageInMem implements UserStorage {
     @Override
     public User deleteUserByID(int userID) {
         return users.remove(userID);
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        Optional<User> userOptional = users.values().stream()
+                .filter(user -> user.getEmail().equals(email))
+                .findFirst();
+
+        return userOptional.orElse(null);
     }
 }

@@ -69,7 +69,10 @@ public class UserService {
         if (email == null) {
             throw new ValidationException("Email couldn't be empty.");
         }
-        if (userStorage.ifEmailIsNotUnique(email, userID)) {
+
+        User user = userStorage.getUserByEmail(email);
+
+        if (user != null && (userID == null || user.getId() != userID)) {
             throw new AlreadyExistException(String.format(
                     "User with Email = %s is already exists", email));
         }

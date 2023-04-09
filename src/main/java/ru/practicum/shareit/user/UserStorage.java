@@ -9,11 +9,11 @@ public interface UserStorage {
 
     User addUser(User user);
 
-    boolean ifEmailIsNotUnique(String email, Integer userID);
-
     User updateUser(User user);
 
     User getUserByID(int userID);
 
     User deleteUserByID(int userID);
+
+    User getUserByEmail(String email);
 }
