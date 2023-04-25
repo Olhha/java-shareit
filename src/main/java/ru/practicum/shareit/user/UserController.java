@@ -1,12 +1,49 @@
 package ru.practicum.shareit.user;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.MarkerValidation;
+import ru.practicum.shareit.user.dto.UserDto;
 
-/**
- * TODO Sprint add-controllers.
- */
+import javax.validation.Valid;
+import java.util.List;
+
+@Validated
 @RestController
 @RequestMapping(path = "/users")
 public class UserController {
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping
+    public List<UserDto> findAllUsers() {
+        return userService.findAllUsers();
+    }
+
+    @PostMapping
+    @Validated(MarkerValidation.OnCreate.class)
+    public UserDto addUser(@Valid @RequestBody UserDto userDto) {
+        return userService.addUser(userDto);
+    }
+
+    @PatchMapping("/{userID}")
+    public UserDto updateUser(@Valid @RequestBody UserDto userDto,
+                              @PathVariable int userID) {
+        return userService.updateUser(userDto.toBuilder().id(userID).build());
+    }
+
+    @GetMapping("/{userID}")
+    public UserDto getUserById(@PathVariable int userID) {
+        return userService.getUserByID(userID);
+    }
+
+    @DeleteMapping("/{userID}")
+    public UserDto deleteUserById(@PathVariable int userID) {
+        return userService.deleteUserByID(userID);
+    }
 }
