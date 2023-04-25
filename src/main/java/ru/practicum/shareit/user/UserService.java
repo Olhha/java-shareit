@@ -8,7 +8,6 @@ import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
-import javax.validation.ValidationException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +33,8 @@ public class UserService {
         return UserMapper.toUserDto(userStorage.addUser(user));
     }
 
-    public UserDto updateUser(UserDto userDto, Integer userID) {
+    public UserDto updateUser(UserDto userDto) {
+        int userID = userDto.getId();
         User user = userStorage.getUserByID(userID);
 
         if (user == null) {
@@ -66,10 +66,6 @@ public class UserService {
     }
 
     private void validateUserEmail(String email, Integer userID) {
-        if (email == null) {
-            throw new ValidationException("Email couldn't be empty.");
-        }
-
         User user = userStorage.getUserByEmail(email);
 
         if (user != null && (userID == null || user.getId() != userID)) {

@@ -41,8 +41,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto updateItem(int itemID, ItemDto itemDto, Integer userID) {
-        Item item = itemStorage.getItemByID(itemID);
+    public ItemDto updateItem(ItemDto itemDto, Integer userID) {
+        Item item = itemStorage.getItemByID(itemDto.getId());
 
         String nameUpdate = itemDto.getName();
         String descriptionUpdate = itemDto.getDescription();
