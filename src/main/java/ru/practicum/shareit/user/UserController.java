@@ -13,10 +13,10 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/users")
 public class UserController {
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserServiceImpl userService) {
         this.userService = userService;
     }
 
@@ -33,17 +33,17 @@ public class UserController {
 
     @PatchMapping("/{userID}")
     public UserDto updateUser(@Valid @RequestBody UserDto userDto,
-                              @PathVariable int userID) {
+                              @PathVariable long userID) {
         return userService.updateUser(userDto.toBuilder().id(userID).build());
     }
 
     @GetMapping("/{userID}")
-    public UserDto getUserById(@PathVariable int userID) {
+    public UserDto getUserById(@PathVariable long userID) {
         return userService.getUserByID(userID);
     }
 
     @DeleteMapping("/{userID}")
-    public UserDto deleteUserById(@PathVariable int userID) {
+    public UserDto deleteUserById(@PathVariable long userID) {
         return userService.deleteUserByID(userID);
     }
 }

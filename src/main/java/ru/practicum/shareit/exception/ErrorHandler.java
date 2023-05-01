@@ -1,5 +1,6 @@
 package ru.practicum.shareit.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,23 +23,13 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCustomValidationException(final ValidationException e) {
-        return new ErrorResponse(
-                "Произошла ошибка валидации запроса."
-                        + e.getMessage()
+        return new ErrorResponse(e.getMessage()
         );
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
-        return new ErrorResponse(
-                e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleAlreadyExistException(final AlreadyExistException e) {
         return new ErrorResponse(
                 e.getMessage()
         );
@@ -57,6 +48,12 @@ public class ErrorHandler {
                 "Произошла непредвиденная ошибка на сервере."
                         + e.getMessage()
         );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleUniqueConstraintViolation(final DataIntegrityViolationException e) {
+        return new ErrorResponse(e.getMessage());
     }
 
 }
