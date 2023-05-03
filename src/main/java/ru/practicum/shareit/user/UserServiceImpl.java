@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
         String nameUpdate = userDto.getName();
         String emailUpdate = userDto.getEmail();
 
-        if (emailUpdate != null) {
+        if ((emailUpdate != null) && (!emailUpdate.isEmpty())) {
             user.setEmail(emailUpdate);
         }
         if ((nameUpdate != null) && (!nameUpdate.isBlank())) {

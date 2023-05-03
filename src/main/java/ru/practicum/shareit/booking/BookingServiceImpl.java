@@ -56,9 +56,6 @@ public class BookingServiceImpl {
 
     @Transactional
     public BookingResponseDto approveBooking(Long userID, Long bookingId, Boolean approved) {
-        if (approved == null) {
-            throw new ValidationException("Approved value is not valid.");
-        }
         Booking booking = getBookingById(bookingId);
 
         if (booking.getItem().getOwner().getId() != userID) {
@@ -78,37 +75,6 @@ public class BookingServiceImpl {
         return BookingMapper.toBookingDto(booking);
     }
 
-    private Booking getBookingById(long bookingId) {
-        return bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException(String.format(
-                        "Booking with id = %d doesn't exist.", bookingId)));
-    }
-
-    private void checkIfBookerIsNotOwner(BookingRequestDto bookingRequestDto, Booking booking) {
-        long bookerId = bookingRequestDto.getBookerId();
-        long ownerId = booking.getItem().getOwner().getId();
-        if (bookerId == ownerId) {
-            throw new NotFoundException("Owners can't book their own items.");
-        }
-    }
-
-    private void checkIfItemIsAvailable(Booking booking) {
-        if (!booking.getItem().getAvailable()) {
-            throw new ValidationException(String.format(
-                    "Item with id = %d isn't available for booking.",
-                    booking.getItem().getId()));
-        }
-    }
-
-    private void checkDates(LocalDateTime start, LocalDateTime end) {
-        if (start.isEqual(end)) {
-            throw new ValidationException("Start and End dates can't be equal");
-        }
-        if (end.isBefore(start)) {
-            throw new ValidationException("End should be after Start");
-        }
-    }
-
     public BookingResponseDto getBookingByIdByOwnerOrBooker(Long userID, Long bookingId) {
         Booking booking = getBookingById(bookingId);
         getUserById(userID);
@@ -118,6 +84,41 @@ public class BookingServiceImpl {
             throw new NotFoundException("Sorry, only item's Owner or Booker can view the booking.");
         }
         return BookingMapper.toBookingDto(booking);
+    }
+
+    public List<BookingResponseDto> getAllBookingsForOwner(Long ownerId, String state) {
+        getUserById(ownerId);
+
+        StateForRequest stateForRequest = parseState(state);
+
+        List<Booking> bookings = List.of();
+
+        switch (stateForRequest) {
+            case ALL:
+                bookings = bookingRepository.findByItemOwnerIdOrderByStartDesc(ownerId);
+                break;
+            case CURRENT:
+                bookings = bookingRepository.findByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
+                        ownerId, LocalDateTime.now(), LocalDateTime.now());
+                break;
+            case PAST:
+                bookings = bookingRepository.findByItemOwnerIdAndEndBeforeOrderByStartDesc(
+                        ownerId, LocalDateTime.now());
+                break;
+            case FUTURE:
+                bookings = bookingRepository.findByItemOwnerIdAndStartIsAfterOrderByStartDesc(
+                        ownerId, LocalDateTime.now());
+                break;
+            case WAITING:
+                bookings = bookingRepository.findByItemOwnerIdAndStatusOrderByStartDesc(
+                        ownerId, Status.WAITING);
+                break;
+            case REJECTED:
+                bookings = bookingRepository.findByItemOwnerIdAndStatusOrderByStartDesc(
+                        ownerId, Status.REJECTED);
+                break;
+        }
+        return bookingsListToDtoList(bookings);
     }
 
     public List<BookingResponseDto> getAllBookingsForUser(Long userId, String state) {
@@ -156,39 +157,35 @@ public class BookingServiceImpl {
         return bookingsListToDtoList(bookings);
     }
 
-    public List<BookingResponseDto> getAllBookingsForOwner(Long ownerId, String state) {
-        getUserById(ownerId);
+    private Booking getBookingById(long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException(String.format(
+                        "Booking with id = %d doesn't exist.", bookingId)));
+    }
 
-        StateForRequest stateForRequest = parseState(state);
-
-        List<Booking> bookings = List.of();
-
-        switch (stateForRequest) {
-            case ALL:
-                bookings = bookingRepository.findByItemOwnerIdOrderByStartDesc(ownerId);
-                break;
-            case CURRENT:
-                bookings = bookingRepository.findByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(
-                        ownerId, LocalDateTime.now(), LocalDateTime.now());
-                break;
-            case PAST:
-                bookings = bookingRepository.findByItemOwnerIdAndEndBeforeOrderByStartDesc(
-                        ownerId, LocalDateTime.now());
-                break;
-            case FUTURE:
-                bookings = bookingRepository.findByItemOwnerIdAndStartIsAfterOrderByStartDesc(
-                        ownerId, LocalDateTime.now());
-                break;
-            case WAITING:
-                bookings = bookingRepository.findByItemOwnerIdAndStatusOrderByStartDesc(
-                        ownerId, Status.WAITING);
-                break;
-            case REJECTED:
-                bookings = bookingRepository.findByItemOwnerIdAndStatusOrderByStartDesc(
-                        ownerId, Status.REJECTED);
-                break;
+    private void checkIfBookerIsNotOwner(BookingRequestDto bookingRequestDto, Booking booking) {
+        long bookerId = bookingRequestDto.getBookerId();
+        long ownerId = booking.getItem().getOwner().getId();
+        if (bookerId == ownerId) {
+            throw new NotFoundException("Owners can't book their own items.");
         }
-        return bookingsListToDtoList(bookings);
+    }
+
+    private void checkIfItemIsAvailable(Booking booking) {
+        if (!booking.getItem().getAvailable()) {
+            throw new ValidationException(String.format(
+                    "Item with id = %d isn't available for booking.",
+                    booking.getItem().getId()));
+        }
+    }
+
+    private void checkDates(LocalDateTime start, LocalDateTime end) {
+        if (start.isEqual(end)) {
+            throw new ValidationException("Start and End dates can't be equal");
+        }
+        if (end.isBefore(start)) {
+            throw new ValidationException("End should be after Start");
+        }
     }
 
     private User getUserById(Long userId) {

@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingMapper;
@@ -70,32 +71,6 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toItemDto(item);
     }
 
-    private static void validateOwner(Long userID, Item item) {
-        if (userID == null) {
-            throw new ValidationException("Owner id is empty.");
-        }
-
-        if (item.getOwner().getId() != userID) {
-            throw new UpdateForbiddenException(String.format(
-                    "User id = %d isn't the owner of item id = %d.", userID, item.getId()));
-        }
-    }
-
-    private static void setUpdate(Item item, String nameUpdate, String descriptionUpdate,
-                                  Boolean availableUpdate) {
-        if ((nameUpdate != null) && (!nameUpdate.isBlank())) {
-            item.setName(nameUpdate);
-        }
-
-        if ((descriptionUpdate != null) && (!descriptionUpdate.isBlank())) {
-            item.setDescription(descriptionUpdate);
-        }
-
-        if (availableUpdate != null) {
-            item.setAvailable(availableUpdate);
-        }
-    }
-
     @Override
     public ItemWithLastAndNextBookingsAndCommentsDto getItemByID(long itemId, Long userId) {
         getUser(userId);
@@ -118,15 +93,13 @@ public class ItemServiceImpl implements ItemService {
             return List.of();
         }
 
-        Map<Long, List<Booking>> bookings = Optional.ofNullable(bookingRepository
-                        .findByStatusAndItemInOrderByStartDesc(Status.APPROVED, items))
-                .orElseGet(Collections::emptyList)
+        Map<Long, List<Booking>> bookings = bookingRepository
+                .findByStatusAndItemInOrderByStartDesc(Status.APPROVED, items)
                 .stream()
                 .collect(groupingBy(b -> b.getItem().getId()));
 
-        Map<Long, List<Comment>> comments = Optional.ofNullable(commentRepository
-                        .findByItemInOrderByCreatedDesc(items))
-                .orElseGet(Collections::emptyList)
+        Map<Long, List<Comment>> comments = commentRepository
+                .findByItemIn(items, Sort.by(Sort.Direction.DESC, "created"))
                 .stream()
                 .collect(groupingBy(c -> c.getItem().getId()));
 
@@ -134,49 +107,6 @@ public class ItemServiceImpl implements ItemService {
                 items.stream()
                         .map(i -> getItemWithLastAndNextBookingsDtoLocal(i, bookings, comments))
                         .collect(Collectors.toList());
-    }
-
-    private ItemWithLastAndNextBookingsAndCommentsDto getItemWithLastAndNextBookingsDtoLocal(
-            Item item, Map<Long, List<Booking>> bookings, Map<Long, List<Comment>> comments) {
-        Long itemId = item.getId();
-
-        Booking lastBooking = Optional.ofNullable(bookings.get(itemId))
-                .orElseGet(Collections::emptyList)
-                .stream()
-                .filter(b -> b.getStart().isBefore(LocalDateTime.now()))
-                .max(Comparator.comparing(Booking::getStart))
-                .orElse(null);
-
-        Booking nextBooking = Optional.ofNullable(bookings.get(itemId))
-                .orElseGet(Collections::emptyList)
-                .stream()
-                .filter(b -> b.getStart().isAfter(LocalDateTime.now()))
-                .min(Comparator.comparing(Booking::getStart))
-                .orElse(null);
-
-        return ItemMapper.toItemWithLastNextDatesAndCommentsDto(item,
-                BookingMapper.toBookingLastNextDto(lastBooking),
-                BookingMapper.toBookingLastNextDto(nextBooking),
-                CommentMapper.toCommentDtoList(
-                        comments.getOrDefault(itemId, List.of())));
-    }
-
-    private ItemWithLastAndNextBookingsAndCommentsDto getItemWithLastAndNextBookingsDto(
-            Item item) {
-        Booking lastBooking = bookingRepository
-                .getFirstByItemIdAndStatusAndStartBeforeOrderByStartDesc(
-                        item.getId(), Status.APPROVED, LocalDateTime.now());
-
-        Booking nextBooking = bookingRepository
-                .getFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
-                        item.getId(), Status.APPROVED, LocalDateTime.now());
-
-        List<Comment> comments = commentRepository.findCommentsByItemId(item.getId());
-
-        return ItemMapper.toItemWithLastNextDatesAndCommentsDto(item,
-                BookingMapper.toBookingLastNextDto(lastBooking),
-                BookingMapper.toBookingLastNextDto(nextBooking),
-                CommentMapper.toCommentDtoList(comments));
     }
 
     @Override
@@ -212,6 +142,47 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
+    private ItemWithLastAndNextBookingsAndCommentsDto getItemWithLastAndNextBookingsDto(
+            Item item) {
+        Booking lastBooking = bookingRepository
+                .getFirstByItemIdAndStatusAndStartLessThanEqualOrderByStartDesc(
+                        item.getId(), Status.APPROVED, LocalDateTime.now());
+
+        Booking nextBooking = bookingRepository
+                .getFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
+                        item.getId(), Status.APPROVED, LocalDateTime.now());
+
+        List<Comment> comments = commentRepository.findCommentsByItemId(item.getId());
+
+        return ItemMapper.toItemWithLastNextDatesAndCommentsDto(item,
+                BookingMapper.toBookingLastNextDto(lastBooking),
+                BookingMapper.toBookingLastNextDto(nextBooking),
+                CommentMapper.toCommentDtoList(comments));
+    }
+
+    private ItemWithLastAndNextBookingsAndCommentsDto getItemWithLastAndNextBookingsDtoLocal(
+            Item item, Map<Long, List<Booking>> bookings, Map<Long, List<Comment>> comments) {
+        Long itemId = item.getId();
+
+        Booking lastBooking = bookings.getOrDefault(itemId, List.of())
+                .stream()
+                .filter(b -> b.getStart().isBefore(LocalDateTime.now()))
+                .findFirst()
+                .orElse(null);
+
+        Booking nextBooking = bookings.getOrDefault(itemId, List.of())
+                .stream()
+                .filter(b -> b.getStart().isAfter(LocalDateTime.now()))
+                .reduce((b1, b2) -> b2)
+                .orElse(null);
+
+        return ItemMapper.toItemWithLastNextDatesAndCommentsDto(item,
+                BookingMapper.toBookingLastNextDto(lastBooking),
+                BookingMapper.toBookingLastNextDto(nextBooking),
+                CommentMapper.toCommentDtoList(
+                        comments.getOrDefault(itemId, List.of())));
+    }
+
     private static List<ItemDto> itemsListToDtoList(List<Item> items) {
         return items.stream()
                 .map(ItemMapper::toItemDto)
@@ -228,5 +199,31 @@ public class ItemServiceImpl implements ItemService {
         return userRepository.findById(userID).orElseThrow(
                 () -> new NotFoundException(String.format(
                         "User with id = %d doesn't exist", userID)));
+    }
+
+    private static void validateOwner(Long userID, Item item) {
+        if (userID == null) {
+            throw new ValidationException("Owner id is empty.");
+        }
+
+        if (item.getOwner().getId() != userID) {
+            throw new UpdateForbiddenException(String.format(
+                    "User id = %d isn't the owner of item id = %d.", userID, item.getId()));
+        }
+    }
+
+    private static void setUpdate(Item item, String nameUpdate, String descriptionUpdate,
+                                  Boolean availableUpdate) {
+        if ((nameUpdate != null) && (!nameUpdate.isBlank())) {
+            item.setName(nameUpdate);
+        }
+
+        if ((descriptionUpdate != null) && (!descriptionUpdate.isBlank())) {
+            item.setDescription(descriptionUpdate);
+        }
+
+        if (availableUpdate != null) {
+            item.setAvailable(availableUpdate);
+        }
     }
 }

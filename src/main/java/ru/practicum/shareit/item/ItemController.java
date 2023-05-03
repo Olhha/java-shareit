@@ -1,9 +1,7 @@
 package ru.practicum.shareit.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.exception.MarkerValidation;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -24,7 +22,6 @@ public class ItemController {
     }
 
     @PostMapping
-    @Validated({MarkerValidation.OnCreate.class})
     public ItemDto addItem(@RequestHeader(USER_ID_HEADER) Long userID,
                            @Valid @RequestBody ItemDto itemDto) {
         return itemService.addItem(itemDto, userID);
