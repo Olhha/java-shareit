@@ -11,11 +11,11 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ItemWithLastAndNextBookingsAndCommentsDto {
-    Long id;
-    String name;
-    String description;
-    Boolean available;
-    BookingLastNextDto lastBooking;
-    BookingLastNextDto nextBooking;
-    List<CommentDto> comments;
+    private Long id;
+    private String name;
+    private String description;
+    private Boolean available;
+    private BookingLastNextDto lastBooking;
+    private BookingLastNextDto nextBooking;
+    private List<CommentResponseDto> comments;
 }

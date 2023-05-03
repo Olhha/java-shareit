@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
@@ -12,11 +13,11 @@ import ru.practicum.shareit.user.model.User;
 
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class BookingServiceImpl {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
@@ -30,6 +31,7 @@ public class BookingServiceImpl {
         this.itemRepository = itemRepository;
     }
 
+    @Transactional
     public BookingResponseDto addBooking(BookingRequestDto bookingRequestDto) {
         checkDates(bookingRequestDto.getStart(), bookingRequestDto.getEnd());
 
@@ -52,9 +54,11 @@ public class BookingServiceImpl {
         return BookingMapper.toBookingDto(bookingSaved);
     }
 
-    public BookingResponseDto approveBooking(Long userID, Long bookingId, String approved) {
-        boolean approvedParsed = checkApproved(approved);
-
+    @Transactional
+    public BookingResponseDto approveBooking(Long userID, Long bookingId, Boolean approved) {
+        if (approved == null) {
+            throw new ValidationException("Approved value is not valid.");
+        }
         Booking booking = getBookingById(bookingId);
 
         if (booking.getItem().getOwner().getId() != userID) {
@@ -65,24 +69,13 @@ public class BookingServiceImpl {
             throw new ValidationException("Booking already approved.");
         }
 
-        if (approvedParsed) {
+        if (approved) {
             booking.setStatus(Status.APPROVED);
         } else {
             booking.setStatus(Status.REJECTED);
         }
-        bookingRepository.save(booking);
 
         return BookingMapper.toBookingDto(booking);
-    }
-
-    private boolean checkApproved(String approved) {
-        if (approved.equalsIgnoreCase("true")) {
-            return true;
-        } else if (approved.equalsIgnoreCase("false")) {
-            return false;
-        } else {
-            throw new ValidationException("Approved value is not valid.");
-        }
     }
 
     private Booking getBookingById(long bookingId) {
@@ -108,17 +101,11 @@ public class BookingServiceImpl {
     }
 
     private void checkDates(LocalDateTime start, LocalDateTime end) {
-        if (start == null || end == null) {
-            throw new ValidationException("Start and End dates can't be empty");
-        }
         if (start.isEqual(end)) {
             throw new ValidationException("Start and End dates can't be equal");
         }
         if (end.isBefore(start)) {
             throw new ValidationException("End should be after Start");
-        }
-        if (start.isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Start can't be in past");
         }
     }
 
@@ -138,7 +125,7 @@ public class BookingServiceImpl {
 
         StateForRequest stateForRequest = parseState(state);
 
-        List<Booking> bookings = new ArrayList<>();
+        List<Booking> bookings = List.of();
 
         switch (stateForRequest) {
             case ALL:
@@ -174,7 +161,7 @@ public class BookingServiceImpl {
 
         StateForRequest stateForRequest = parseState(state);
 
-        List<Booking> bookings = new ArrayList<>();
+        List<Booking> bookings = List.of();
 
         switch (stateForRequest) {
             case ALL:

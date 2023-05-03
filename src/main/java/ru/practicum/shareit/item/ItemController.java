@@ -4,7 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.exception.MarkerValidation;
-import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithLastAndNextBookingsAndCommentsDto;
 
@@ -55,10 +56,10 @@ public class ItemController {
     }
 
     @PostMapping("{itemId}/comment")
-    public CommentDto addCommentToItem(@RequestHeader(USER_ID_HEADER) Long userID,
-                                       @PathVariable Long itemId,
-                                       @Valid @RequestBody CommentDto commentDto) {
-        return itemService.addCommentToItem(itemId, userID, commentDto);
+    public CommentResponseDto addCommentToItem(@RequestHeader(USER_ID_HEADER) Long userID,
+                                               @PathVariable Long itemId,
+                                               @Valid @RequestBody CommentRequestDto commentRequestDto) {
+        return itemService.addCommentToItem(itemId, userID, commentRequestDto);
     }
 
 }

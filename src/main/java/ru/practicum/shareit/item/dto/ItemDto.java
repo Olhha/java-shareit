@@ -13,7 +13,7 @@ public class ItemDto {
     Long id;
     @NotBlank
     String name;
-    @NotNull
+    @NotBlank
     String description;
     @NotNull
     Boolean available;

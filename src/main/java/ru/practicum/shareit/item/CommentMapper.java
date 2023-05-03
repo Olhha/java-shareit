@@ -1,30 +1,38 @@
 package ru.practicum.shareit.item;
 
-import ru.practicum.shareit.item.dto.CommentDto;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommentMapper {
-    public static CommentDto toCommentDto(Comment comment) {
-        return CommentDto.builder()
+    public static CommentResponseDto toCommentDto(Comment comment) {
+        if (comment == null) {
+            return null;
+        }
+        return CommentResponseDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
                 .created(comment.getCreated())
                 .authorName(comment.getAuthor().getName())
-                .itemId(comment.getItem().getId())
                 .build();
     }
 
-    public static Comment toComment(CommentDto commentDto) {
+    public static Comment toComment(CommentRequestDto commentRequestDto) {
         return Comment.builder()
-                .id(commentDto.getId())
-                .text(commentDto.getText())
+                .text(commentRequestDto.getText())
                 .build();
     }
 
-    public static List<CommentDto> toCommentDtoList(List<Comment> comments) {
+    public static List<CommentResponseDto> toCommentDtoList(List<Comment> comments) {
+        if (comments == null) {
+            return null;
+        }
         return comments.stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());

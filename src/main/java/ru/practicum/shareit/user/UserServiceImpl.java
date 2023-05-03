@@ -2,15 +2,16 @@ package ru.practicum.shareit.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
@@ -28,12 +29,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.toUser(userDto);
         return UserMapper.toUserDto(userRepository.save(user));
     }
 
     @Override
+    @Transactional
     public UserDto updateUser(UserDto userDto) {
         long userID = userDto.getId();
         User user = userRepository.findById(userID)
@@ -46,11 +49,11 @@ public class UserServiceImpl implements UserService {
         if (emailUpdate != null) {
             user.setEmail(emailUpdate);
         }
-        if (nameUpdate != null) {
+        if ((nameUpdate != null) && (!nameUpdate.isBlank())) {
             user.setName(nameUpdate);
         }
 
-        return UserMapper.toUserDto(userRepository.save(user));
+        return UserMapper.toUserDto(user);
     }
 
     @Override
@@ -63,15 +66,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto deleteUserByID(long userID) {
-        //TODO: удалить все его вещи?
-        Optional<User> userToDelete = userRepository.findById(userID);
+        User userToDelete = userRepository.findById(userID).orElseThrow(
+                () -> new NotFoundException(String.format(
+                        "User with id = %d doesn't exist.", userID)
+                ));
 
-        if (userToDelete.isEmpty()) {
-            throw new NotFoundException(String.format(
-                    "User with id = %d doesn't exist.", userID));
-        }
         userRepository.deleteById(userID);
-        return UserMapper.toUserDto(userToDelete.get());
+        return UserMapper.toUserDto(userToDelete);
     }
 }

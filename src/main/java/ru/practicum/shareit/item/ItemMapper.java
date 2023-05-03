@@ -1,7 +1,9 @@
 package ru.practicum.shareit.item;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.dto.BookingLastNextDto;
-import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithLastAndNextBookingsAndCommentsDto;
 import ru.practicum.shareit.item.model.Item;
@@ -9,6 +11,7 @@ import ru.practicum.shareit.request.ItemRequest;
 
 import java.util.List;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
     public static ItemDto toItemDto(Item item) {
         return ItemDto.builder()
@@ -22,7 +25,7 @@ public class ItemMapper {
 
     public static ItemWithLastAndNextBookingsAndCommentsDto toItemWithLastNextDatesAndCommentsDto(
             Item item, BookingLastNextDto lastBooking, BookingLastNextDto nextBooking,
-            List<CommentDto> commentsDto) {
+            List<CommentResponseDto> commentsDto) {
         return ItemWithLastAndNextBookingsAndCommentsDto.builder()
                 .id(item.getId())
                 .name(item.getName())

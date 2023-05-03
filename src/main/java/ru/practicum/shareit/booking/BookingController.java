@@ -8,9 +8,7 @@ import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import javax.validation.Valid;
 import java.util.List;
 
-/**
- * TODO Sprint add-bookings.
- */
+
 @RestController
 @RequestMapping(path = "/bookings")
 public class BookingController {
@@ -31,7 +29,7 @@ public class BookingController {
     @PatchMapping("/{bookingId}")
     public BookingResponseDto approveBooking(@RequestHeader(USER_ID_HEADER) Long userID,
                                              @PathVariable Long bookingId,
-                                             @RequestParam String approved) {
+                                             @RequestParam Boolean approved) {
         return bookingService.approveBooking(userID, bookingId, approved);
     }
 
@@ -45,14 +43,14 @@ public class BookingController {
     @GetMapping
     public List<BookingResponseDto> getAllBookingsForUser(
             @RequestHeader(USER_ID_HEADER) Long userId,
-            @RequestParam(required = false, defaultValue = "ALL") String state) {
+            @RequestParam(defaultValue = "ALL") String state) {
         return bookingService.getAllBookingsForUser(userId, state);
     }
 
     @GetMapping("/owner")
     public List<BookingResponseDto> getAllBookingsForOwner(
             @RequestHeader(USER_ID_HEADER) Long userId,
-            @RequestParam(required = false, defaultValue = "ALL") String state) {
+            @RequestParam(defaultValue = "ALL") String state) {
         return bookingService.getAllBookingsForOwner(userId, state);
     }
 }

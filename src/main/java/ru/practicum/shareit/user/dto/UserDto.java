@@ -13,7 +13,7 @@ public class UserDto {
     Long id;
     @NotBlank(groups = MarkerValidation.OnCreate.class)
     String name;
-    @Email
+    @Email(groups = {MarkerValidation.OnCreate.class, MarkerValidation.OnUpdate.class})
     @NotBlank(groups = MarkerValidation.OnCreate.class)
     String email;
 }
