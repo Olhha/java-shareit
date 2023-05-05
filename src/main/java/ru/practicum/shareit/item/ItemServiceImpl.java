@@ -77,7 +77,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = getItem(itemId);
 
         if (item.getOwner().getId() == userId) {
-            return getItemWithLastAndNextBookingsDto(item);
+            return getItemWithLastAndNextBookingsDto(item, LocalDateTime.now());
         }
         List<Comment> comments = commentRepository.findCommentsByItemId(itemId);
 
@@ -103,9 +103,11 @@ public class ItemServiceImpl implements ItemService {
                 .stream()
                 .collect(groupingBy(c -> c.getItem().getId()));
 
+        LocalDateTime timeStamp = LocalDateTime.now();
         return
                 items.stream()
-                        .map(i -> getItemWithLastAndNextBookingsDtoLocal(i, bookings, comments))
+                        .map(i -> getItemWithLastAndNextBookingsDtoLocal(
+                                i, bookings, comments, timeStamp))
                         .collect(Collectors.toList());
     }
 
@@ -123,19 +125,21 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public CommentResponseDto addCommentToItem(Long itemId, Long userID,
                                                CommentRequestDto commentRequestDto) {
-        checkIfUserCanComment(userID, itemId);
+        LocalDateTime timeStamp = LocalDateTime.now();
+
+        checkIfUserCanComment(userID, itemId, timeStamp);
 
         Comment comment = CommentMapper.toComment(commentRequestDto);
         comment.setItem(getItem(itemId));
         comment.setAuthor(getUser(userID));
-        comment.setCreated(LocalDateTime.now());
+        comment.setCreated(timeStamp);
 
         return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 
-    private void checkIfUserCanComment(Long userID, Long itemId) {
+    private void checkIfUserCanComment(Long userID, Long itemId, LocalDateTime timeStamp) {
         List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndEndBefore(
-                userID, itemId, LocalDateTime.now());
+                userID, itemId, timeStamp);
 
         if (bookings.isEmpty()) {
             throw new ValidationException("User id = %d can't comment on the Item id = %d");
@@ -143,14 +147,14 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private ItemWithLastAndNextBookingsAndCommentsDto getItemWithLastAndNextBookingsDto(
-            Item item) {
+            Item item, LocalDateTime timeStamp) {
         Booking lastBooking = bookingRepository
                 .getFirstByItemIdAndStatusAndStartLessThanEqualOrderByStartDesc(
-                        item.getId(), Status.APPROVED, LocalDateTime.now());
+                        item.getId(), Status.APPROVED, timeStamp);
 
         Booking nextBooking = bookingRepository
                 .getFirstByItemIdAndStatusAndStartAfterOrderByStartAsc(
-                        item.getId(), Status.APPROVED, LocalDateTime.now());
+                        item.getId(), Status.APPROVED, timeStamp);
 
         List<Comment> comments = commentRepository.findCommentsByItemId(item.getId());
 
@@ -161,18 +165,19 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private ItemWithLastAndNextBookingsAndCommentsDto getItemWithLastAndNextBookingsDtoLocal(
-            Item item, Map<Long, List<Booking>> bookings, Map<Long, List<Comment>> comments) {
+            Item item, Map<Long, List<Booking>> bookings, Map<Long,
+            List<Comment>> comments, LocalDateTime timeStamp) {
         Long itemId = item.getId();
 
         Booking lastBooking = bookings.getOrDefault(itemId, List.of())
                 .stream()
-                .filter(b -> b.getStart().isBefore(LocalDateTime.now()))
+                .filter(b -> !b.getStart().isAfter(LocalDateTime.now()))
                 .findFirst()
                 .orElse(null);
 
         Booking nextBooking = bookings.getOrDefault(itemId, List.of())
                 .stream()
-                .filter(b -> b.getStart().isAfter(LocalDateTime.now()))
+                .filter(b -> b.getStart().isAfter(timeStamp))
                 .reduce((b1, b2) -> b2)
                 .orElse(null);
 
