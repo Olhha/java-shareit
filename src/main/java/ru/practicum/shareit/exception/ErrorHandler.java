@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 @Slf4j
@@ -29,6 +30,13 @@ public class ErrorHandler {
         log.debug("Validation Exception, статус 400 Bad request: {}", e.getMessage(), e);
         return new ErrorResponse(e.getMessage()
         );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleCustomValidationException(final ConstraintViolationException e) {
+        log.debug("Validation Exception, статус 400 Bad request: {}", e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler

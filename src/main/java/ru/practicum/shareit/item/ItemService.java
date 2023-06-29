@@ -14,9 +14,10 @@ public interface ItemService {
 
     ItemWithLastAndNextBookingsAndCommentsDto getItemByID(long itemId, Long userID);
 
-    List<ItemWithLastAndNextBookingsAndCommentsDto> getItemsForUser(Long userID);
+    List<ItemWithLastAndNextBookingsAndCommentsDto> getItemsForUser(
+            Long userID, Integer from, Integer size);
 
-    List<ItemDto> searchItemsByText(String text);
+    List<ItemDto> searchItemsByText(String text, Integer from, Integer size);
 
     CommentResponseDto addCommentToItem(Long itemId, Long userID, CommentRequestDto commentRequestDto);
 }

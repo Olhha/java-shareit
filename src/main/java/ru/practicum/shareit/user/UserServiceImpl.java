@@ -52,7 +52,6 @@ public class UserServiceImpl implements UserService {
         if ((nameUpdate != null) && (!nameUpdate.isBlank())) {
             user.setName(nameUpdate);
         }
-
         return UserMapper.toUserDto(user);
     }
 
