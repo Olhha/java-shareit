@@ -112,7 +112,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void addItem_DtoToModel_test() {
+    void addItem_DtoToModel() {
         itemServiceMock.addItem(itemDto, userId);
 
         verify(userRepositoryMock).findById(userId);
@@ -120,7 +120,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void addItem_RequestIdNotNull_test() {
+    void addItem_RequestIdNotNull() {
         Mockito.when(itemRequestRepositoryMock.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(new ItemRequest()));
         ItemDto itemDtoWithRequest = itemDto.toBuilder().requestId(1L).build();
@@ -129,7 +129,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void updateItem_AllFieldsUpdate_test() {
+    void updateItem_AllFieldsUpdate() {
         ItemDto updatedItem = itemServiceMock.updateItem(itemUpdate, userId);
 
         assertThat(updatedItem, allOf(
@@ -140,7 +140,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void updateItem_byNotOwner_test() {
+    void updateItem_byNotOwner() {
         Long anotherUserId = 2L;
 
         assertThrows(UpdateForbiddenException.class,
@@ -148,13 +148,13 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void updateItem_nullUserId_test() {
+    void updateItem_nullUserId() {
         assertThrows(ValidationException.class,
                 () -> itemServiceMock.updateItem(itemUpdate, null));
     }
 
     @Test
-    void getItemByID_test() {
+    void getItemByID() {
         ItemWithLastAndNextBookingsAndCommentsDto itemDtoReceived
                 = itemServiceMock.getItemByID(itemId, userId);
 
@@ -166,7 +166,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void getItemsForUser_test() {
+    void getItemsForUser() {
         List<ItemWithLastAndNextBookingsAndCommentsDto> itemsDto
                 = itemServiceMock.getItemsForUser(userId, 1, 10);
 
@@ -174,14 +174,14 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void searchItemsByText_test() {
+    void searchItemsByText() {
         List<ItemDto> itemsDto
                 = itemServiceMock.searchItemsByText("Book", 1, 10);
         assertThat(itemsDto, hasSize(3));
     }
 
     @Test
-    void addCommentToItem_test() {
+    void addCommentToItem() {
         Booking booking = Booking.builder()
                 .id(1L)
                 .item(item)
@@ -206,7 +206,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void addCommentToItem_nullComment_test() {
+    void addCommentToItem_nullComment() {
         Mockito.when(commentRepositoryMock.save(Mockito.any()))
                 .thenReturn(null);
         Booking booking = Booking.builder()
@@ -228,7 +228,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void addEmptyCommentToItem_test() {
+    void addEmptyCommentToItem() {
         Booking booking = Booking.builder()
                 .id(1L)
                 .item(item)
@@ -253,7 +253,7 @@ class ItemServiceImplUnitTest {
     }
 
     @Test
-    void addCommentToItem_authorCantComment_test() {
+    void addCommentToItem_authorCantComment() {
         Mockito.when(bookingRepositoryMock.findByBookerIdAndItemIdAndEndBefore(
                         Mockito.anyLong(), Mockito.anyLong(), Mockito.any()))
                 .thenReturn(List.of());

@@ -72,10 +72,12 @@ class ItemRequestServiceImplTest {
                 .thenReturn(itemRequest);
         Mockito.lenient().when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(requester));
+        Mockito.lenient().when(userRepositoryMock.existsById(anyLong()))
+                .thenReturn(true);
     }
 
     @Test
-    void addRequest_userNotFound_test() {
+    void addRequest_userNotFound() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.empty());
         ItemRequestDto requestDto = ItemRequestDto.builder()
@@ -88,7 +90,7 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void addRequest_test() {
+    void addRequest() {
         ItemRequestDto requestDto = ItemRequestDto.builder()
                 .requesterId(requesterId)
                 .description("Long long description")
@@ -128,7 +130,7 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void getRequestById_test() {
+    void getRequestById() {
         Mockito.when(itemRequestRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(itemRequest));
 
@@ -144,7 +146,7 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void getRequestById_itemRequestNotFound_test() {
+    void getRequestById_itemRequestNotFound() {
         Mockito.when(itemRequestRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.empty());
 

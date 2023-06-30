@@ -19,7 +19,6 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 public class ItemRequestServiceImpl implements ItemRequestService {
-
     private final ItemRequestRepository itemRequestRepository;
     private final UserRepository userRepository;
 
@@ -33,7 +32,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     @Transactional
     public ItemRequestResponseDto addRequest(ItemRequestDto requestDto) {
-        User user = getUser(requestDto.getRequesterId());
+        long userId = requestDto.getRequesterId();
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException(String.format(
+                        "User with id = %d doesn't exist", userId)));
 
         ItemRequest itemRequest = ItemRequestMapper.toItemRequest(requestDto);
         itemRequest.setRequester(user);
@@ -46,7 +49,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestResponseDto> getRequestsForUser(Long userId) {
-        getUser(userId);
+        throwIfUserNotExist(userId);
         return ItemRequestMapper.toItemRequestDtoList(
                 itemRequestRepository.findByRequesterId(userId,
                         Sort.by(Sort.Direction.DESC, "created")));
@@ -55,7 +58,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestResponseDto> getAllRequests(
             Long userId, Integer from, Integer size) {
-        getUser(userId);
+        throwIfUserNotExist(userId);
 
         List<ItemRequest> itemRequestsPaged = itemRequestRepository.findAllByRequesterIdNot(
                         userId, PageRequest.of(from / size, size,
@@ -68,7 +71,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public ItemRequestResponseDto getRequestById(Long userId, Long requestId) {
-        getUser(userId);
+        throwIfUserNotExist(userId);
 
         ItemRequest itemRequest = itemRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException(
@@ -77,9 +80,10 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return ItemRequestMapper.toItemRequestResponseDto(itemRequest);
     }
 
-    private User getUser(Long userID) {
-        return userRepository.findById(userID).orElseThrow(
-                () -> new NotFoundException(String.format(
-                        "User with id = %d doesn't exist", userID)));
+    private void throwIfUserNotExist(Long userID) {
+        if (!userRepository.existsById(userID)) {
+            throw new NotFoundException(String.format(
+                    "User with id = %d doesn't exist", userID));
+        }
     }
 }

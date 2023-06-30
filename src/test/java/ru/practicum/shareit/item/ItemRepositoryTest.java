@@ -11,12 +11,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.request.ItemRequestRepository;
-import ru.practicum.shareit.request.model.ItemRequest;
-import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,45 +26,24 @@ import static org.hamcrest.Matchers.hasSize;
 @DataJpaTest
 @AutoConfigureTestDatabase
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Transactional
 class ItemRepositoryTest {
     @Autowired
     TestEntityManager entityManager;
     @Autowired
     ItemRepository itemRepository;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    ItemRequestRepository itemRequestRepository;
-
     Item item;
     User user;
-
     final Pageable page = PageRequest.of(0, 10);
 
     @BeforeEach
     void setUp() {
-        user = new User();
-        user.setName("Ivanov Ivan");
-        user.setEmail("ivan.ivanov@email.com");
-        userRepository.save(user);
-
-        ItemRequest request = new ItemRequest();
-        request.setDescription("Item request description");
-        request.setRequester(user);
-        itemRequestRepository.save(request);
-
-        item = new Item();
-        item.setName("something");
-        item.setDescription("Item description");
-        item.setOwner(user);
-        item.setAvailable(true);
-        item.setRequest(request);
-        itemRepository.save(item);
-
+        user = createUser("Ivanov Ivan", "ivan.ivanov@email.com");
+        item = createItem("something", "Item description", true);
     }
 
     @Test
-    void saveItem_test() {
+    void saveItem() {
         Optional<Item> itemFound = itemRepository.findById(item.getId());
 
         assertThat(itemFound.get(), equalTo(item));
@@ -92,9 +70,10 @@ class ItemRepositoryTest {
     }
 
     @Test
-    void updateItem_test() {
+    void updateItem() {
         item.setName("New Name");
         item.setAvailable(false);
+        itemRepository.save(item);
 
         Optional<Item> itemFound = itemRepository.findById(item.getId());
 
@@ -102,12 +81,52 @@ class ItemRepositoryTest {
         assertThat(itemFound.get().getAvailable(), equalTo(false));
     }
 
-
-
     @AfterEach
     void tearDown() {
-        itemRepository.deleteAll();
-        itemRequestRepository.deleteAll();
-        userRepository.deleteAll();
+        entityManager.getEntityManager().createQuery("delete from Item").executeUpdate();
+        entityManager.getEntityManager().createQuery("delete from User").executeUpdate();
+    }
+
+    private Item createItem(String name, String description, boolean available) {
+        Item newItem = Item.builder()
+                .name(name)
+                .description(description)
+                .available(available)
+                .owner(user)
+                .build();
+
+        entityManager.getEntityManager().createNativeQuery(
+                        "INSERT INTO items (owner_id, name, description, is_available) " +
+                                "VALUES (?,?,?,?)")
+                .setParameter(1, user.getId())
+                .setParameter(2, newItem.getName())
+                .setParameter(3, newItem.getDescription())
+                .setParameter(4, newItem.getAvailable())
+                .executeUpdate();
+
+        BigInteger id = (BigInteger) entityManager.getEntityManager()
+                .createNativeQuery("SELECT max(id) FROM items").getSingleResult();
+        newItem.setId(id.longValue());
+        return newItem;
+    }
+
+    private User createUser(String name, String email) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+
+        entityManager.getEntityManager().createNativeQuery(
+                        "INSERT INTO users (email, name) VALUES (?,?)")
+                .setParameter(1, email)
+                .setParameter(2, name)
+                .executeUpdate();
+
+        long userId = entityManager.getEntityManager().createQuery(
+                        "SELECT u FROM User u WHERE u.email = :email", User.class)
+                .setParameter("email", email)
+                .getSingleResult().getId();
+        user.setId(userId);
+
+        return user;
     }
 }

@@ -1,6 +1,5 @@
 package ru.practicum.shareit.request.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
@@ -8,6 +7,7 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 
 @Entity
@@ -32,7 +32,20 @@ public class ItemRequest {
     @OneToMany(targetEntity = Item.class,
             mappedBy = "request",
             fetch = FetchType.LAZY)
-    @JsonManagedReference
     @ToString.Exclude
     List<Item> items;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ItemRequest that = (ItemRequest) o;
+        return id == that.id && Objects.equals(description, that.description)
+                && Objects.equals(requester, that.requester) && Objects.equals(created, that.created);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

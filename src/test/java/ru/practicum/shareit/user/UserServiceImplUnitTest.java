@@ -84,7 +84,7 @@ class UserServiceImplUnitTest {
 
 
     @Test
-    void updateUser_allFields_test() {
+    void updateUser_allFields() {
         Mockito.lenient().when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(user));
 
@@ -99,7 +99,7 @@ class UserServiceImplUnitTest {
     }
 
     @Test
-    void updateUser_noUserForUpdate_test() {
+    void updateUser_noUserForUpdate() {
         Mockito.lenient().when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
@@ -108,7 +108,7 @@ class UserServiceImplUnitTest {
     }
 
     @Test
-    void getUserByID_test() {
+    void getUserByID() {
         Mockito.when(userRepositoryMock.findById(userId))
                 .thenReturn(Optional.of(user));
 
@@ -122,7 +122,7 @@ class UserServiceImplUnitTest {
     }
 
     @Test
-    void getUserByID_notFound_test() {
+    void getUserByID_notFound() {
         Mockito.when(userRepositoryMock.findById(userId))
                 .thenReturn(Optional.empty());
 
@@ -130,7 +130,7 @@ class UserServiceImplUnitTest {
     }
 
     @Test
-    void deleteUserByID_test() {
+    void deleteUserByID() {
         Mockito.when(userRepositoryMock.findById(userId))
                 .thenReturn(Optional.of(user));
         UserDto userDeletedDto = userServiceMock.deleteUserByID(userId);
@@ -143,7 +143,7 @@ class UserServiceImplUnitTest {
     }
 
     @Test
-    void deleteUserByID_notFound_test() {
+    void deleteUserByID_notFound() {
         Mockito.when(userRepositoryMock.findById(userId))
                 .thenReturn(Optional.empty());
 

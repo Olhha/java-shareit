@@ -126,7 +126,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBooking_EndEqualsStart_test() {
+    void addBooking_EndEqualsStart() {
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         BookingRequestDto bookingRequestDto =
                 BookingRequestDto.builder()
@@ -141,7 +141,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBooking_EndBeforeStart_test() {
+    void addBooking_EndBeforeStart() {
         LocalDateTime start = LocalDateTime.now().plusDays(2);
         LocalDateTime end = LocalDateTime.now().plusDays(1);
 
@@ -158,7 +158,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBooking_itemNotFound_test() {
+    void addBooking_itemNotFound() {
         BookingRequestDto bookingRequestDto =
                 BookingRequestDto.builder()
                         .start(LocalDateTime.now().plusDays(1))
@@ -175,7 +175,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBooking_itemUnavailable_test() {
+    void addBooking_itemUnavailable() {
         BookingRequestDto bookingRequestDto =
                 BookingRequestDto.builder()
                         .start(LocalDateTime.now().plusDays(1))
@@ -194,7 +194,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBooking_bookerIsOwner_test() {
+    void addBooking_bookerIsOwner() {
         BookingRequestDto bookingRequestDto =
                 BookingRequestDto.builder()
                         .start(LocalDateTime.now().plusDays(1))
@@ -211,7 +211,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBooking_test() {
+    void addBooking() {
 
 
         Mockito.when(itemRepositoryMock.findById(anyLong()))
@@ -237,21 +237,21 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void approveBooking_bookingNotFound_test() {
+    void approveBooking_bookingNotFound() {
         assertThrows(NotFoundException.class,
                 () -> bookingServiceMock.approveBooking(
                         ownerUserId, otherBookingId, true));
     }
 
     @Test
-    void approveBooking_byNotOwner_test() {
+    void approveBooking_byNotOwner() {
         assertThrows(NotFoundException.class,
                 () -> bookingServiceMock.approveBooking(
                         bookerUserId, bookingId, true));
     }
 
     @Test
-    void approveBooking_alreadyApproved_test() {
+    void approveBooking_alreadyApproved() {
         booking.setStatus(Status.APPROVED);
         assertThrows(ValidationException.class,
                 () -> bookingServiceMock.approveBooking(
@@ -259,7 +259,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void approveBooking_setApproved_test() {
+    void approveBooking_setApproved() {
         BookingResponseDto bookingResponseDto =
                 bookingServiceMock.approveBooking(
                         ownerUserId, bookingId, true);
@@ -273,7 +273,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void approveBooking_setRejected_test() {
+    void approveBooking_setRejected() {
         BookingResponseDto bookingResponseDto =
                 bookingServiceMock.approveBooking(
                         ownerUserId, bookingId, false);
@@ -287,7 +287,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getBookingByIdByOwnerOrBooker_byOwner_test() {
+    void getBookingByIdByOwnerOrBooker_byOwner() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
 
@@ -298,7 +298,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getBookingByIdByOwnerOrBooker_byBooker_test() {
+    void getBookingByIdByOwnerOrBooker_byBooker() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
 
@@ -309,7 +309,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getBookingByIdByOwnerOrBooker_byOtherUser_test() {
+    void getBookingByIdByOwnerOrBooker_byOtherUser() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(otherUser));
 
@@ -318,7 +318,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForOwner_ALL_test() {
+    void getAllBookingsForOwner_ALL() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
         Mockito.when(bookingRepositoryMock.findByItemOwnerIdOrderByStartDesc(
@@ -333,7 +333,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForOwner_CURRENT_test() {
+    void getAllBookingsForOwner_CURRENT() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
         Mockito.when(bookingRepositoryMock.findByItemOwnerIdAndStartLessThanEqualAndEndAfterOrderByStartDesc(
@@ -351,7 +351,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForOwner_PAST_test() {
+    void getAllBookingsForOwner_PAST() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
         Mockito.when(bookingRepositoryMock.findByItemOwnerIdAndEndBeforeOrderByStartDesc(
@@ -367,7 +367,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForOwner_FUTURE_test() {
+    void getAllBookingsForOwner_FUTURE() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
         Mockito.when(bookingRepositoryMock.findByItemOwnerIdAndStartIsAfterOrderByStartDesc(
@@ -383,7 +383,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForOwner_WAITING_test() {
+    void getAllBookingsForOwner_WAITING() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
         Mockito.when(bookingRepositoryMock.findByItemOwnerIdAndStatusOrderByStartDesc(
@@ -399,7 +399,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForOwner_REJECTED_test() {
+    void getAllBookingsForOwner_REJECTED() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
         Mockito.when(bookingRepositoryMock.findByItemOwnerIdAndStatusOrderByStartDesc(
@@ -415,7 +415,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForOwner_unknownState_test() {
+    void getAllBookingsForOwner_unknownState() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
 
@@ -425,11 +425,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForUser() {
-    }
-
-    @Test
-    void getAllBookingsForUser_ALL_test() {
+    void getAllBookingsForUser_ALL() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
         Mockito.when(bookingRepositoryMock.findByBookerIdOrderByStartDesc(
@@ -444,7 +440,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForUser_CURRENT_test() {
+    void getAllBookingsForUser_CURRENT() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
         Mockito.when(bookingRepositoryMock.findByBookerIdAndStartLessThanEqualAndEndAfterOrderByStartDesc(
@@ -462,7 +458,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForUser_PAST_test() {
+    void getAllBookingsForUser_PAST() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
         Mockito.when(bookingRepositoryMock.findByBookerIdAndEndBeforeOrderByStartDesc(
@@ -478,7 +474,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForUser_FUTURE_test() {
+    void getAllBookingsForUser_FUTURE() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
         Mockito.when(bookingRepositoryMock.findByBookerIdAndStartIsAfterOrderByStartDesc(
@@ -494,7 +490,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForUser_WAITING_test() {
+    void getAllBookingsForUser_WAITING() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
         Mockito.when(bookingRepositoryMock.findByBookerIdAndStatusOrderByStartDesc(
@@ -510,7 +506,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForUser_REJECTED_test() {
+    void getAllBookingsForUser_REJECTED() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
         Mockito.when(bookingRepositoryMock.findByBookerIdAndStatusOrderByStartDesc(
@@ -526,7 +522,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookingsForUser_unknownState_test() {
+    void getAllBookingsForUser_unknownState() {
         Mockito.when(userRepositoryMock.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
 

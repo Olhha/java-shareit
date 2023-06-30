@@ -69,7 +69,7 @@ class BookingControllerTest {
 
     @SneakyThrows
     @Test
-    void addBooking_test() {
+    void addBooking() {
         Mockito.when(bookingService.addBooking(any(BookingRequestDto.class)))
                 .thenReturn(bookingResponseDto);
 

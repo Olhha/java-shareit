@@ -65,7 +65,7 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void findAllUsers_test() {
+    void findAllUsers() {
         Mockito.when(userService.findAllUsers()).thenReturn(userDtos);
 
         mockMvc.perform(get("/users"))
@@ -81,7 +81,7 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void addUser_test() {
+    void addUser() {
         Mockito.when(userService.addUser(any(UserDto.class))).thenReturn(userDto);
 
         mockMvc.perform(post("/users")
@@ -99,7 +99,7 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void addUser_emptyName_test() {
+    void addUser_emptyName() {
         Mockito.when(userService.addUser(any(UserDto.class))).thenReturn(userDto);
 
         UserDto incorrectUserDto = UserDto.builder()
@@ -117,7 +117,7 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void addUser_incorrectEmail_test() {
+    void addUser_incorrectEmail() {
         Mockito.when(userService.addUser(any(UserDto.class))).thenReturn(userDto);
 
         UserDto incorrectUserDto = UserDto.builder()
@@ -154,7 +154,7 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void getUserById_test() {
+    void getUserById() {
         Mockito.when(userService.getUserByID(anyLong())).thenReturn(userDto);
 
         mockMvc.perform(get("/users/" + userId))

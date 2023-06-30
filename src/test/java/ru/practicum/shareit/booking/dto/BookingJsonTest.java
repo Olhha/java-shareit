@@ -9,6 +9,7 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -21,10 +22,10 @@ class BookingJsonTest {
 
     @SneakyThrows
     @Test
-    void bookingRequestDto_bookerId_JsonIgnore_test() {
+    void bookingRequestDto_bookerId_JsonIgnore() {
         BookingRequestDto bookingRequestDto = BookingRequestDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
+                .start(LocalDateTime.now().plusDays(1).truncatedTo(ChronoUnit.MILLIS))
+                .end(LocalDateTime.now().plusDays(2).truncatedTo(ChronoUnit.MILLIS))
                 .itemId(1L)
                 .bookerId(2L)
                 .build();
@@ -34,5 +35,9 @@ class BookingJsonTest {
         assertThat(result).hasEmptyJsonPathValue("$.bookerId");
         assertThat(result).extractingJsonPathValue("$.itemId")
                 .isEqualTo(1);
+        assertThat(result).extractingJsonPathValue("$.start")
+                .isEqualTo(bookingRequestDto.getStart().toString());
+        assertThat(result).extractingJsonPathValue("$.end")
+                .isEqualTo(bookingRequestDto.getEnd().toString());
     }
 }

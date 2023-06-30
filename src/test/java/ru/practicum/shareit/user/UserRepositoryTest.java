@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import static org.hamcrest.Matchers.*;
 @DataJpaTest
 @AutoConfigureTestDatabase
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Transactional
 class UserRepositoryTest {
     @Autowired
     TestEntityManager entityManager;
@@ -33,30 +35,44 @@ class UserRepositoryTest {
         user.setName("Ivanov Ivan");
         user.setEmail("ivan.ivanov@email.com");
 
+        entityManager.getEntityManager().createNativeQuery(
+                        "INSERT INTO users (email, name) VALUES (?,?)")
+                .setParameter(1, user.getEmail())
+                .setParameter(2, user.getName())
+                .executeUpdate();
+
+        long userId = entityManager.getEntityManager().createQuery(
+                        "SELECT u FROM User u WHERE u.email = :email", User.class)
+                .setParameter("email", user.getEmail())
+                .getSingleResult().getId();
+
+        user.setId(userId);
+    }
+
+    @Test
+    void saveUsers() {
         userRepository.save(user);
+
+        User userFound = selectUserById(user.getId());
+
+        assertThat(user, equalTo(userFound));
+        assertThat(user.toString(), equalTo(userFound.toString()));
     }
 
     @Test
-    void saveUsers_test() {
-        Optional<User> userFound = userRepository.findById(user.getId());
-
-        assertThat(userFound.get(), equalTo(user));
-        assertThat(userFound.get().toString(), equalTo(user.toString()));
-    }
-
-    @Test
-    void updateUser_test() {
+    void updateUser() {
         user.setEmail("newEmail@email.com");
         user.setName("New Name");
+        userRepository.save(user);
 
-        Optional<User> userUpdated = userRepository.findById(user.getId());
+        User userFound = selectUserById(user.getId());
 
-        assertThat(userUpdated.get().getEmail(), equalTo("newEmail@email.com"));
-        assertThat(userUpdated.get().getName(), equalTo("New Name"));
+        assertThat(userFound.getEmail(), equalTo("newEmail@email.com"));
+        assertThat(userFound.getName(), equalTo("New Name"));
     }
 
     @Test
-    void findAll_test() {
+    void findAll() {
         User user2 = new User();
         user2.setName("Petrov Petr");
         user2.setEmail("petrov@email.com");
@@ -80,8 +96,16 @@ class UserRepositoryTest {
         assertThat(userFound.isPresent(), equalTo(false));
     }
 
+
     @AfterEach
-    void deleteUsers() {
-        userRepository.deleteAll();
+    void cleanUp() {
+        entityManager.getEntityManager().createQuery("delete from User").executeUpdate();
+    }
+
+    private User selectUserById(long id) {
+        return entityManager.getEntityManager().createQuery(
+                        "SELECT u FROM User u WHERE u.id = :id", User.class)
+                .setParameter("id", id)
+                .getSingleResult();
     }
 }

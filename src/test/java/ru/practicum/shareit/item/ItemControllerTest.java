@@ -117,7 +117,7 @@ class ItemControllerTest {
 
     @Test
     @SneakyThrows
-    void addItem_test() {
+    void addItem() {
         Mockito.when(itemService.addItem(any(ItemDto.class), anyLong())).thenReturn(itemDto);
 
         mockMvc.perform(post("/items")
@@ -136,7 +136,7 @@ class ItemControllerTest {
 
     @Test
     @SneakyThrows
-    void updateItem_test() {
+    void updateItem() {
         Mockito.when(itemService.updateItem(any(ItemDto.class), anyLong())).thenReturn(itemDto);
 
         mockMvc.perform(patch("/items/" + itemId)
@@ -155,7 +155,7 @@ class ItemControllerTest {
 
     @Test
     @SneakyThrows
-    void updateItem_byNotOwner_test() {
+    void updateItem_byNotOwner() {
         Mockito.when(itemService.updateItem(any(ItemDto.class), anyLong()))
                 .thenThrow(new UpdateForbiddenException("User isn't the owner of the item."));
 
@@ -171,7 +171,7 @@ class ItemControllerTest {
 
     @Test
     @SneakyThrows
-    void getItem_test() {
+    void getItem() {
         Mockito.when(itemService.getItemByID(anyLong(), anyLong())).thenReturn(itemExtendedDto);
         mockMvc.perform(get("/items/" + itemId)
                         .header("X-Sharer-User-Id", userId))
@@ -192,7 +192,7 @@ class ItemControllerTest {
 
     @Test
     @SneakyThrows
-    void getItem_itemNotFound_test() {
+    void getItem_itemNotFound() {
         Mockito.when(itemService.getItemByID(anyLong(), anyLong()))
                 .thenThrow(new NotFoundException("NotFoundException"));
         mockMvc.perform(get("/items/" + itemId)
@@ -237,7 +237,7 @@ class ItemControllerTest {
 
     @Test
     @SneakyThrows
-    void addCommentToItem_test() {
+    void addCommentToItem() {
         CommentRequestDto commentRequestDto = new CommentRequestDto();
         commentRequestDto.setText("Very useful thing");
         Mockito.when(itemService.addCommentToItem(anyLong(), anyLong(), any(CommentRequestDto.class)))
@@ -256,7 +256,7 @@ class ItemControllerTest {
 
     @Test
     @SneakyThrows
-    void addCommentToItem_userCantComment_test() {
+    void addCommentToItem_userCantComment() {
         CommentRequestDto commentRequestDto = new CommentRequestDto();
         commentRequestDto.setText("Very useful thing");
         Mockito.when(itemService.addCommentToItem(anyLong(), anyLong(), any(CommentRequestDto.class)))

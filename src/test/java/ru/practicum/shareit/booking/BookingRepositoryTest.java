@@ -12,12 +12,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,10 +32,6 @@ class BookingRepositoryTest {
     TestEntityManager entityManager;
     @Autowired
     BookingRepository bookingRepository;
-    @Autowired
-    ItemRepository itemRepository;
-    @Autowired
-    UserRepository userRepository;
 
     Booking bookingPastApproved;
     Booking bookingFutureApproved;
@@ -46,69 +42,52 @@ class BookingRepositoryTest {
     User owner;
     Item item;
     final Pageable page = PageRequest.of(0, 10);
-    final LocalDateTime now = LocalDateTime.now();
+    final LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
 
     @BeforeEach
     void setUp() {
-        booker = User.builder()
-                .email("booker@user.com")
-                .name("Ivan Booker")
-                .build();
-        userRepository.save(booker);
+        booker = createUser("Ivan Booker", "booker@user.com");
+        owner = createUser("Ivan Owner", "owner@user.com");
 
-        owner = User.builder()
-                .email("owner@user.com")
-                .name("Ivan Owner")
-                .build();
-        userRepository.save(owner);
-
-        item = Item.builder()
-                .name("Book")
-                .description("Interesting book")
-                .available(true)
-                .owner(owner)
-                .build();
-        itemRepository.save(item);
+        item = createItem();
 
         bookingPastApproved = createBooking(Status.APPROVED, now.minusDays(5), now.minusDays(4));
         bookingFutureApproved = createBooking(Status.APPROVED, now.plusDays(5), now.plusDays(6));
         bookingFutureWaiting = createBooking(Status.WAITING, now.plusDays(5), now.plusDays(6));
         bookingPastRejected = createBooking(Status.REJECTED, now.minusDays(5), now.minusDays(4));
         bookingCurrent = createBooking(Status.APPROVED, now.minusDays(3), now.plusDays(3));
-        bookingRepository.save(bookingPastApproved);
-        bookingRepository.save(bookingFutureApproved);
-        bookingRepository.save(bookingFutureWaiting);
-        bookingRepository.save(bookingPastRejected);
-        bookingRepository.save(bookingCurrent);
     }
 
-    private Booking createBooking(Status status, LocalDateTime start, LocalDateTime end) {
-        return Booking.builder()
-                .status(status)
-                .start(start)
-                .end(end)
-                .booker(booker)
-                .item(item)
-                .build();
-    }
 
     @AfterEach
     void tearDown() {
-        bookingRepository.deleteAll();
-        itemRepository.deleteAll();
-        userRepository.deleteAll();
+        entityManager.getEntityManager().createQuery("delete from Booking").executeUpdate();
+        entityManager.getEntityManager().createQuery("delete from Item").executeUpdate();
+        entityManager.getEntityManager().createQuery("delete from User").executeUpdate();
     }
 
     @Test
     void findByBookerIdOrderByStartDesc() {
-        List<Booking> bookings = bookingRepository.findByBookerIdOrderByStartDesc(booker.getId(), page).getContent();
+        List<Booking> bookings = bookingRepository
+                .findByBookerIdOrderByStartDesc(booker.getId(), page).getContent();
         assertThat(bookings, hasSize(5));
+        assertThat(bookings.get(0), equalTo(bookingFutureApproved));
+        assertThat(bookings.get(1), equalTo(bookingFutureWaiting));
+        assertThat(bookings.get(2), equalTo(bookingCurrent));
+        assertThat(bookings.get(3), equalTo(bookingPastApproved));
+        assertThat(bookings.get(4), equalTo(bookingPastRejected));
     }
 
     @Test
     void findByItemOwnerIdOrderByStartDesc() {
-        List<Booking> bookings = bookingRepository.findByItemOwnerIdOrderByStartDesc(owner.getId(), page).getContent();
+        List<Booking> bookings = bookingRepository
+                .findByItemOwnerIdOrderByStartDesc(owner.getId(), page).getContent();
         assertThat(bookings, hasSize(5));
+        assertThat(bookings.get(0), equalTo(bookingFutureApproved));
+        assertThat(bookings.get(1), equalTo(bookingFutureWaiting));
+        assertThat(bookings.get(2), equalTo(bookingCurrent));
+        assertThat(bookings.get(3), equalTo(bookingPastApproved));
+        assertThat(bookings.get(4), equalTo(bookingPastRejected));
     }
 
     @Test
@@ -210,5 +189,73 @@ class BookingRepositoryTest {
         assertThat(bookings.get(0), equalTo(bookingFutureApproved));
         assertThat(bookings.get(1), equalTo(bookingCurrent));
         assertThat(bookings.get(2), equalTo(bookingPastApproved));
+    }
+
+    private User createUser(String name, String email) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+
+        entityManager.getEntityManager().createNativeQuery(
+                        "INSERT INTO users (email, name) VALUES (?,?)")
+                .setParameter(1, email)
+                .setParameter(2, name)
+                .executeUpdate();
+
+        long userId = entityManager.getEntityManager().createQuery(
+                        "SELECT u FROM User u WHERE u.email = :email", User.class)
+                .setParameter("email", email)
+                .getSingleResult().getId();
+        user.setId(userId);
+
+        return user;
+    }
+
+    private Booking createBooking(Status status, LocalDateTime start, LocalDateTime end) {
+        Booking newBooking = Booking.builder()
+                .status(status)
+                .start(start)
+                .end(end)
+                .booker(booker)
+                .item(item)
+                .build();
+
+        entityManager.getEntityManager().createNativeQuery(
+                        "INSERT INTO bookings (item_id, booker_id, status, start_date, end_date) " +
+                                "VALUES (?,?,?,?,?)")
+                .setParameter(1, item.getId())
+                .setParameter(2, booker.getId())
+                .setParameter(3, status.toString())
+                .setParameter(4, start)
+                .setParameter(5, end)
+                .executeUpdate();
+
+        BigInteger id = (BigInteger) entityManager.getEntityManager()
+                .createNativeQuery("SELECT max(id) FROM bookings").getSingleResult();
+        newBooking.setId(id.longValue());
+        return newBooking;
+    }
+
+    private Item createItem() {
+        Item newItem = Item.builder()
+                .name("Book")
+                .description("Interesting book")
+                .available(true)
+                .owner(owner)
+                .build();
+
+        entityManager.getEntityManager().createNativeQuery(
+                        "INSERT INTO items (owner_id, name, description, is_available) " +
+                                "VALUES (?,?,?,?)")
+                .setParameter(1, owner.getId())
+                .setParameter(2, newItem.getName())
+                .setParameter(3, newItem.getDescription())
+                .setParameter(4, newItem.getAvailable())
+                .executeUpdate();
+
+        BigInteger id = (BigInteger) entityManager.getEntityManager()
+                .createNativeQuery("SELECT max(id) FROM items").getSingleResult();
+        newItem.setId(id.longValue());
+        return newItem;
     }
 }
