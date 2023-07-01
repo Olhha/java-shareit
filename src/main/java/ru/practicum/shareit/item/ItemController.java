@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
@@ -8,8 +9,10 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithLastAndNextBookingsAndCommentsDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/items")
 public class ItemController {
@@ -43,13 +46,18 @@ public class ItemController {
 
     @GetMapping
     public List<ItemWithLastAndNextBookingsAndCommentsDto> getItemsForUser(
-            @RequestHeader(USER_ID_HEADER) Long userID) {
-        return itemService.getItemsForUser(userID);
+            @RequestHeader(USER_ID_HEADER) Long userID,
+            @RequestParam(defaultValue = "0") @Min(0) Integer from,
+            @RequestParam(defaultValue = "20") @Min(1) Integer size) {
+        return itemService.getItemsForUser(userID, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItemsByText(@RequestParam String text) {
-        return itemService.searchItemsByText(text);
+    public List<ItemDto> searchItemsByText(
+            @RequestParam String text,
+            @RequestParam(defaultValue = "0") @Min(0) Integer from,
+            @RequestParam(defaultValue = "20") @Min(1) Integer size) {
+        return itemService.searchItemsByText(text, from, size);
     }
 
     @PostMapping("{itemId}/comment")
