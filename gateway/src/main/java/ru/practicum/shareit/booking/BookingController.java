@@ -9,11 +9,12 @@ import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
+import static ru.practicum.shareit.constants.Headers.USER_ID_HEADER;
+
 @Validated
 @RestController
 @RequestMapping(path = "/bookings")
 public class BookingController {
-    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
     private final BookingClient bookingClient;
 
     @Autowired

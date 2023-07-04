@@ -9,12 +9,12 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
+import static ru.practicum.shareit.constants.Headers.USER_ID_HEADER;
+
 @Validated
 @RestController
 @RequestMapping(path = "/requests")
 public class ItemRequestController {
-
-    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
     private final ItemRequestClient itemRequestClient;
 
     @Autowired

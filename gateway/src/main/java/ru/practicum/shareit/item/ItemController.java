@@ -10,11 +10,12 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
+import static ru.practicum.shareit.constants.Headers.USER_ID_HEADER;
+
 @Validated
 @RestController
 @RequestMapping("/items")
 public class ItemController {
-    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
     private final ItemClient itemClient;
 
     @Autowired
